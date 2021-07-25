@@ -1,7 +1,7 @@
 // 位置PIDのサンプルプログラムです
 // Elecomのゲームパッドの情報を利用します
 // 作成日：2021年5月27日　作成者：ueno
-// 最終修正日：2021年7月7日 編集者：ueno　※M5stackへ対応
+// 最終修正日：2021年7月25日 編集者：ueno　※上半身との通信対応
 
 #include <Arduino.h>
 #include <MsTimer2.h>
@@ -18,6 +18,7 @@
 #include "Platform.h"
 #include "SDclass.h"
 #include "RoboClaw.h"
+#include "CommHost.h"
 
 PhaseCounter enc1(1);
 PhaseCounter enc2(2);
@@ -25,6 +26,7 @@ ManualControl manualCon;
 AutoControl autonomous;
 Platform platform(1, 1, -1, -1); // 括弧内の引数で回転方向を変えられる
 Controller CON;
+CommHost UpperBody(&SERIAL_UPPER);
 
 //AMT203V amt203(&SPI, PIN_CSB);
 LpmsMe1 lpms(&SERIAL_LPMSME1);
@@ -233,6 +235,13 @@ void loop()
     gRefV = autonomous.getRefVel(CON.getButtonState()); // 各目標点に対する位置決め動作を生成
     platform.VelocityControl(gRefV); // 目標速度に応じて，プラットフォームを制御
     // <<<<
+
+    // 上半身との通信部分
+    UpperBody.send((uint16_t)CON.getButtonState(), 0x44, 0x00);
+    if(UpperBody.recv()){
+      Serial.print("recv:");
+      Serial.print(UpperBody.recvOrder);
+    }
     
     // シリアル出力する
     Serial.print(CON.getButtonState(),BIN);
