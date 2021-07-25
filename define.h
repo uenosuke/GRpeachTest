@@ -12,6 +12,7 @@ struct coords{
 #define RED  0
 #define BLUE 1
 
+#define SERIAL_UPPER    Serial0
 #define SERIAL_LPMSME1  Serial1
 #define SERIAL_ROBOCLAW Serial4
 #define SERIAL_CON      Serial5
