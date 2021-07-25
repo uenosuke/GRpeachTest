@@ -12,7 +12,6 @@ class CommHost{
         bool recv();                 //受信するための関数
         unsigned int recvOrder;
     private:
-        uint8_t upper_order;
         HardwareSerial* serial; // 使うシリアル
 };
 
