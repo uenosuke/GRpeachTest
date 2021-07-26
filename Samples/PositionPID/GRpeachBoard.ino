@@ -227,7 +227,7 @@ void loop()
 {
   // 10msに1回ピン情報を出力する
   if(flag_10ms){
-    CON.update(); // コントローラからの受信
+    bool conUpdate = CON.update(); // コントローラからの受信
     
     //ユーザ編集部分 >>>>>>>>>>>>>>>>>
 
@@ -237,7 +237,9 @@ void loop()
     // <<<<
 
     // 上半身との通信部分
-    UpperBody.send((uint16_t)CON.getButtonState(), 0x44, 0x00);
+    if(conUpdate){
+      UpperBody.send((uint16_t)CON.getButtonState(), 0x44, 0x00);
+    }
     if(UpperBody.recv()){
       Serial.print("recv:");
       Serial.print(UpperBody.recvOrder);

@@ -36,6 +36,11 @@
     #define MASK_BUTTON_A  0x0004
     #define MASK_BUTTON_B  0x0008
 
+    #define MASK_BUTTON_SHIKAKU 0x0001
+    #define MASK_BUTTON_SANKAKU 0x0002
+    #define MASK_BUTTON_BATU    0x0004
+    #define MASK_BUTTON_MARU    0x0008
+
     #define MASK_BUTTON_L1     0x0010
     #define MASK_BUTTON_R1     0x0020
     #define MASK_BUTTON_L2     0x0040

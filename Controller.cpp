@@ -68,6 +68,15 @@ bool Controller::update(){
                     conData.RJoyY |= (unsigned int)(receive_data[7] - 0x20);
                     conData.RJoyY |= (unsigned int)((receive_data[8] - 0x20) & 0x03) << 6;
                     conData.RJoyY = abs(conData.RJoyY - 0xFF);
+
+                    int buttonPushNum = 0;
+                    for(int i = 0; i < 16; i++){
+                        buttonPushNum += (conData.ButtonState >> i) & 0x0001;
+                    }
+                    if(buttonPushNum > 10){
+                        conData.ButtonState = pre_conData.ButtonState;
+                        comCheck = false;
+                    }
                 }
             }
             recv_num = 0;
@@ -110,6 +119,15 @@ bool Controller::update(){
                     conData.RJoyY |= (receive_data[7] - 0x20);
                     conData.RJoyY |= ((receive_data[8] - 0x20) & 0x03) << 6;
                     conData.RJoyY = abs(conData.RJoyY - 0xFF);
+
+                    int buttonPushNum = 0;
+                    for(int i = 0; i < 16; i++){
+                        buttonPushNum += (conData.ButtonState >> i) & 0x0001;
+                    }
+                    if(buttonPushNum > 10){
+                        conData.ButtonState = pre_conData.ButtonState;
+                        comCheck = false;
+                    }
                 }
             }
             recv_num = 0;
