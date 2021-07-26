@@ -132,6 +132,7 @@ void setup()
   SERIAL_CON.begin(115200);
   SERIAL_M5STACK.begin(115200);
   //SERIAL_XBEE.begin(115200);
+  SERIAL_UPPER.begin(115200);
   
   pinMode(PIN_XBEERESET, OUTPUT); // XBeeのリセット
   digitalWrite(PIN_XBEERESET, 0);
@@ -227,9 +228,10 @@ void setup()
 
 void loop()
 {
+
   // 10msに1回ピン情報を出力する
   if(flag_10ms){
-    CON.update(); // コントローラからの受信
+    bool conUpdate = CON.update(); // コントローラからの受信
     
     //ユーザ編集部分 >>>>>>>>>>>>>>>>>
 
@@ -237,9 +239,11 @@ void loop()
     coords refV = manualCon.getRefVel(CON.readJoyLXbyte(), CON.readJoyLYbyte(), CON.readJoyRYbyte()); // ジョイスティックの値から，目標速度を生成
     platform.VelocityControl(refV); // 目標速度に応じて，プラットフォームを制御
     // <<<<
-
+    
     // 上半身との通信部分
-    UpperBody.send((uint16_t)CON.getButtonState(), 0x44, 0x00);
+    if(conUpdate){
+      UpperBody.send(CON.getButtonState(), 0x44, 0x00);
+    }
     if(UpperBody.recv()){
       Serial.print("recv:");
       Serial.print(UpperBody.recvOrder);

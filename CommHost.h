@@ -8,7 +8,7 @@
 class CommHost{
     public:
         CommHost(HardwareSerial*);
-        uint8_t send(uint16_t buttonState, uint8_t sendOrder1, uint8_t sendOrder2); //送信するための関数(3byte送信)
+        uint8_t send(unsigned int buttonState, uint8_t sendOrder1, uint8_t sendOrder2); //送信するための関数(3byte送信)
         bool recv();                 //受信するための関数
         unsigned int recvOrder;
     private:

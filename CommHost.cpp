@@ -4,26 +4,28 @@
 
 CommHost::CommHost(HardwareSerial* xserial){
     serial = xserial;
-    serial->begin(115200);
     recvOrder = 0;
 }
 
 //足回りに送信するための関数(3byte送信)
-uint8_t CommHost::send(uint16_t buttonState, uint8_t sendOrder1, uint8_t sendOrder2)
+uint8_t CommHost::send(unsigned int buttonState, uint8_t sendOrder1, uint8_t sendOrder2)
 {
-    uint8_t send_str[6] = {};
+    uint8_t send_str[10] = {};
     
-    send_str[0] = (uint8_t)(buttonState >> 8 & 0xFF);
-    send_str[1] = (uint8_t)buttonState;
-    send_str[2] = sendOrder1;
-    send_str[3] = sendOrder2;
-
-    send_str[4] = ( (send_str[0] ^ send_str[1]) ^ send_str[2]) ^ send_str[3];
-    send_str[5] = 0xB4;
-    for (int i = 0; i < 6; i++)
-    {
-        serial->write(send_str[i]);
+    send_str[0] = (uint8_t)(buttonState & 0xFF);
+    send_str[1] = (uint8_t)(buttonState >> 8) & 0xFF;
+    send_str[2] = (uint8_t)(buttonState >> 16) & 0xFF;
+    send_str[3] = sendOrder1;
+    send_str[4] = sendOrder2;
+    
+    uint8_t checksum = 0;
+    for(int i = 0; i < 5; i++){
+        checksum ^= send_str[i];
     }
+    send_str[5] = checksum;
+    send_str[6] = 0xB4;
+    
+    serial->write(send_str, 7); // 7バイト送信
     
     return true;
 }

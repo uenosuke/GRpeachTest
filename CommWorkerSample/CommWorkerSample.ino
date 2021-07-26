@@ -60,10 +60,9 @@ void loop()
 {
   // 10msに1回ピン情報を出力する
   if(flag_10ms){
-    CON.update(); // コントローラからの受信
-    
     // 上半身との通信部分
-    UnderBody.send(0x44, 0x00); // 指令の送信
+    //UnderBody.send(0x44, 0x00); // 指令の送信
+    
     if(UnderBody.recv()){
       Serial.print("button:");
       Serial.print(UnderBody.buttonState);
