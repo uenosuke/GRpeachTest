@@ -17,10 +17,22 @@
     #define MASK_BUTTON_RIGHT 0x02
     #define MASK_BUTTON_DOWN  0x04
     #define MASK_BUTTON_LEFT  0x08
+
     #define MASK_BUTTON_R1    0x10
     #define MASK_BUTTON_R2    0x20
     #define MASK_BUTTON_L1    0x40
     #define MASK_BUTTON_L2    0x80
+
+    // Uiコンにはこれらは無いが，上下左右と共通化してプログラムは動くようにさせる
+    #define MASK_BUTTON_X  0x01
+    #define MASK_BUTTON_Y  0x02
+    #define MASK_BUTTON_A  0x04
+    #define MASK_BUTTON_B  0x08
+    // Uiコンにはこれらは無いが，上下左右と共通化してプログラムは動くようにさせる
+    #define MASK_BUTTON_SHIKAKU 0x01
+    #define MASK_BUTTON_SANKAKU 0x02
+    #define MASK_BUTTON_BATU    0x04
+    #define MASK_BUTTON_MARU    0x08
 
     #define BUTTON_UP    1
     #define BUTTON_RIGHT 2

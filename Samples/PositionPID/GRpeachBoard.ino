@@ -322,9 +322,9 @@ void send_state(){
 
   sendStr[4] = sendaData[1] & 0x3F;
   sendStr[5] = ( sendaData[1] >> 6 ) & 0x1F;
-  if(flagMinus[1]) sendStr[6] |= 0x20;
+  if(flagMinus[1]) sendStr[5] |= 0x20;
   
-  sendStr[7] = sendaData[2] & 0x3F;
+  sendStr[6] = sendaData[2] & 0x3F;
   sendStr[7] = ( sendaData[2] >> 6 ) & 0x1F;
   if(flagMinus[2]) sendStr[7] |= 0x20;
 
