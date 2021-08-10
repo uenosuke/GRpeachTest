@@ -339,15 +339,15 @@ void printVelData()
   lcd.setTextColor(TFT_WHITE);
   lcd.fillRect(52, 15, 50, 20, TFT_BLACK);
   lcd.setCursor(55, 30);
-  lcd.printf("%5.2lf", gPosi.x);
+  lcd.printf("%5.2lf", refVel.x);
 
   lcd.fillRect(158, 15, 50, 20, TFT_BLACK);
   lcd.setCursor(161, 30);
-  lcd.printf("%5.2lf", gPosi.y);
+  lcd.printf("%5.2lf", refVel.y);
 
   lcd.fillRect(266, 15, 50, 20, TFT_BLACK);
   lcd.setCursor(269, 30);
-  lcd.printf("%5.2lf", gPosi.z);
+  lcd.printf("%5.2lf", refVel.z);
 }
 
 // 座標データの書き換え用関数
@@ -359,15 +359,15 @@ void printPosiData()
 
     lcd.fillRoundRect(5, 68, 100, 55, 5, COLOR_PINK);
     lcd.setCursor(15, 106);
-    lcd.printf("%5.2lf", refVel.x);
+    lcd.printf("%5.2lf", gPosi.x);
 
     lcd.fillRoundRect(110, 68, 100, 55, 5, COLOR_PINK);
     lcd.setCursor(120, 106);
-    lcd.printf("%5.2lf", refVel.y);
+    lcd.printf("%5.2lf", gPosi.y);
 
     lcd.fillRoundRect(215, 68, 100, 55, 5, COLOR_PINK);
     lcd.setCursor(225, 106);
-    lcd.printf("%5.2lf", refVel.z);
+    lcd.printf("%5.2lf", gPosi.z);
   }
   else if (dispNum == 1) {
     lcd.setTextColor(TFT_BLACK);
@@ -375,15 +375,15 @@ void printPosiData()
 
     lcd.fillRoundRect(75, 5, 150, 55, 5, COLOR_PINK);
     lcd.setCursor(90, 50);
-    lcd.printf("%5.2lf", refVel.x);
+    lcd.printf("%5.2lf", gPosi.x);
 
     lcd.fillRoundRect(160, 65, 150, 55, 5, COLOR_PINK);
     lcd.setCursor(175, 110);
-    lcd.printf("%5.2lf", refVel.y);
+    lcd.printf("%5.2lf", gPosi.y);
 
     lcd.fillRoundRect(75, 125, 150, 55, 5, COLOR_PINK);
     lcd.setCursor(90, 170);
-    lcd.printf("%5.2lf", refVel.z);
+    lcd.printf("%5.2lf", gPosi.z);
   }
 }
 

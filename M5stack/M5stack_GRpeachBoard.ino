@@ -38,7 +38,7 @@ void receivePeach()
   unsigned int checksum = 0;
   char c;
 
-  int recvData[6] = {0};
+  int recvData[10] = {0};
 
   while (Serial2.available())
   {
@@ -51,14 +51,14 @@ void receivePeach()
         {
           robotState = recv_msgs[1]; // ロボットの状態を示すデータ
 
-          recvData[0] = (int)(recv_msgs[2] & 0x3F) | ((recv_msgs[3] & 0x1F) << 6);
-          recvData[1] = (int)(recv_msgs[4] & 0x3F) | ((recv_msgs[5] & 0x1F) << 6);
-          recvData[2] = (int)(recv_msgs[6] & 0x3F) | ((recv_msgs[7] & 0x1F) << 6);
-          recvData[3] = (int)(recv_msgs[8] & 0x3F) | ((recv_msgs[9] & 0x1F) << 6);
-          recvData[4] = (int)(recv_msgs[10] & 0x3F) | ((recv_msgs[11] & 0x1F) << 6);
-          recvData[5] = (int)(recv_msgs[12] & 0x3F) | ((recv_msgs[13] & 0x1F) << 6);
+          recvData[0] = (int)(recv_msgs[2] & 0x3F) | (int)((recv_msgs[3] & 0x1F) << 6);
+          recvData[1] = (int)(recv_msgs[4] & 0x3F) | (int)((recv_msgs[5] & 0x1F) << 6);
+          recvData[2] = (int)(recv_msgs[6] & 0x3F) | (int)((recv_msgs[7] & 0x1F) << 6);
+          recvData[3] = (int)(recv_msgs[8] & 0x3F) | (int)((recv_msgs[9] & 0x1F) << 6);
+          recvData[4] = (int)(recv_msgs[10] & 0x3F) | (int)((recv_msgs[11] & 0x1F) << 6);
+          recvData[5] = (int)(recv_msgs[12] & 0x3F) | (int)((recv_msgs[13] & 0x1F) << 6);
           for (int i = 1; i <= 6; i++) { // 符号を付ける処理
-            if (recv_msgs[i * 2] & 0x20 != 0) recvData[i] *= -1;
+            if ((recv_msgs[i * 2 + 1] & 0x20) == 0x20) recvData[i - 1] = -recvData[i - 1];
           }
 
           LJoyX = recv_msgs[14];
@@ -120,6 +120,7 @@ void IRAM_ATTR onTimer()
 
 // the setup routine runs once when M5Stack starts up
 void setup() {
+  //delay(1000);
 
   // Initialize the M5Stack object
   M5.begin();
@@ -129,10 +130,10 @@ void setup() {
     If used battery, please call this function in your project
   */
   M5.Power.begin();
-  M5.Speaker.begin(); // これが無いとmuteしても無意味になる
-  M5.Speaker.mute(); // スピーカにノイズが乗るのでミュートする
+  //M5.Speaker.begin(); // これが無いとmuteしても無意味になる
+  //M5.Speaker.mute(); // スピーカにノイズが乗るのでミュートする
 
-  Serial.begin(115200);
+  //Serial.begin(115200);
   Serial2.begin(115200);
 
   // 画面出力関係 /////////////////////
