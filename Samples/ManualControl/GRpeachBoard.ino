@@ -202,7 +202,7 @@ void setup()
   while((robotState & STATE_READY) == 0){
     delay(5);
     CON.update();
-    send_state();
+    send_state(0);
     
     if(CON.readButton(BUTTON_RIGHT) == 2){
       robotState |= STATE_READY;
@@ -293,7 +293,8 @@ void loop()
 
   // 100msごとにLCDを更新する
   if(flag_100ms){
-    send_state(); // M5stackへ状態の送信 ※不要な場合はコメントアウトを
+    send_state(1); // M5stackへ状態の送信 ※不要な場合はコメントアウトを
+    //send_state(2); // 引数2で現在位置だけ送信
 
     //ユーザ編集部分 >>>>>>>>>>>>>>>>>
 
@@ -304,11 +305,12 @@ void loop()
 }
 
 // M5stackに送るデータ
-void send_state(){
+void send_state(int num){
   unsigned int checksum = 0;
   char sendStr[25] = {0};
   int sendaData[6] = { (int)(gPosi.x * 100),  (int)(gPosi.y * 100),  (int)(gPosi.z * 100), (int)(gRefV.x * 100),  (int)(gRefV.y * 100),  (int)(gRefV.z * 100)};
   bool flagMinus[6] = {0};
+  int send_num = 0;
 
   for(int i = 0; i < 6; i++){
     if(sendaData[i] < 0){
@@ -330,34 +332,45 @@ void send_state(){
   sendStr[7] = ( sendaData[2] >> 6 ) & 0x1F;
   if(flagMinus[2]) sendStr[7] |= 0x20;
 
-  sendStr[8] = sendaData[3] & 0x3F;
-  sendStr[9] = ( sendaData[3] >> 6 ) & 0x1F;
-  if(flagMinus[3]) sendStr[9] |= 0x20;
-  
-  sendStr[10] = sendaData[4] & 0x3F;
-  sendStr[11] = ( sendaData[4] >> 6 ) & 0x1F;
-  if(flagMinus[4]) sendStr[11] |= 0x20;
-  
-  sendStr[12] = sendaData[5] & 0x3F;
-  sendStr[13] = ( sendaData[5] >> 6 ) & 0x1F;
-  if(flagMinus[5]) sendStr[13] |= 0x20;
+  if(num == 2){
+    send_num = 7;
+  }else{
+    sendStr[8] = sendaData[3] & 0x3F;
+    sendStr[9] = ( sendaData[3] >> 6 ) & 0x1F;
+    if(flagMinus[3]) sendStr[9] |= 0x20;
+    
+    sendStr[10] = sendaData[4] & 0x3F;
+    sendStr[11] = ( sendaData[4] >> 6 ) & 0x1F;
+    if(flagMinus[4]) sendStr[11] |= 0x20;
+    
+    sendStr[12] = sendaData[5] & 0x3F;
+    sendStr[13] = ( sendaData[5] >> 6 ) & 0x1F;
+    if(flagMinus[5]) sendStr[13] |= 0x20;
 
-  sendStr[14] = (int)(CON.readJoyLXbyte() * 0.247) & 0x3F;
-  sendStr[15] = (int)(CON.readJoyLYbyte() * 0.247) & 0x3F;
-  sendStr[16] = (int)(CON.readJoyRXbyte() * 0.247) & 0x3F;
-  sendStr[17] = (int)(CON.readJoyRYbyte() * 0.247) & 0x3F;
-  
-  unsigned int ButtonState = CON.getButtonState(); // コントローラデータ格納用
-  sendStr[18] = ButtonState & 0x3F;
-  sendStr[19] = (ButtonState >> 6) & 0x3F;
-  sendStr[20] = (ButtonState >> 12) & 0x3F; // ここはボタン数によって書き換える
+    if(num == 1){
+      send_num = 13;
+    }
+    else{
+      sendStr[14] = (int)(CON.readJoyLXbyte() * 0.247) & 0x3F;
+      sendStr[15] = (int)(CON.readJoyLYbyte() * 0.247) & 0x3F;
+      sendStr[16] = (int)(CON.readJoyRXbyte() * 0.247) & 0x3F;
+      sendStr[17] = (int)(CON.readJoyRYbyte() * 0.247) & 0x3F;
+      
+      unsigned int ButtonState = CON.getButtonState(); // コントローラデータ格納用
+      sendStr[18] = ButtonState & 0x3F;
+      sendStr[19] = (ButtonState >> 6) & 0x3F;
+      sendStr[20] = (ButtonState >> 12) & 0x3F; // ここはボタン数によって書き換える
 
-  for(int i = 0; i < 21; i++){
-    checksum += (unsigned int)sendStr[i];
-    SERIAL_M5STACK.write(sendStr[i] + 0x20);
+      send_num = 20;
+    }
+
+    for(int i = 0; i <= send_num; i++){
+      checksum += (unsigned int)sendStr[i];
+      SERIAL_M5STACK.write(sendStr[i] + 0x20);
+    }
+    sendStr[21] = (char)checksum & 0x3F;
+    SERIAL_M5STACK.write(sendStr[21] + 0x20);
+    //SERIAL_M5STACK.write((checksum & 0x3F) + 0x20);  
+    SERIAL_M5STACK.print("\n");
   }
-  sendStr[20] = (char)checksum & 0x3F;
-  SERIAL_M5STACK.write(sendStr[20] + 0x20);
-  //SERIAL_M5STACK.write((checksum & 0x3F) + 0x20);  
-  SERIAL_M5STACK.print("\n");
 }
