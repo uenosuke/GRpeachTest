@@ -114,13 +114,14 @@ coords AutoControl::getRefVel(unsigned int swState){
     static unsigned int pre_swState = swState;
 
     // Edit here >>>>>
-    // <<<<<
     if(0){
 
     }
     else{
+        // とりあえず常に停止するようにしているので，適宜修正してください
         refV = commandMode_vel(0.0, 0.0, 0.0); // 該当しない場合はとりあえず速度ゼロ
     }
+    // <<<<<
 
     pre_swState = swState;
 

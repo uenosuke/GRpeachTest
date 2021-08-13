@@ -152,11 +152,10 @@ coords AutoControl::getRefVel(unsigned int swState){
             phase = 1;
         } // 以降，1~4の繰り返し
     }
-    // <<<<<
-
     else{
         refV = commandMode_vel(0.0, 0.0, 0.0); // 該当しない場合はとりあえず速度ゼロ
     }
+    // <<<<<
 
     pre_swState = swState;
 
