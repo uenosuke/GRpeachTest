@@ -146,7 +146,7 @@ void setup()
   pinMode(PIN_LED_2, OUTPUT);
   pinMode(PIN_LED_3, OUTPUT);
   pinMode(PIN_LED_4, OUTPUT);
-  pinMode(PIN_LED_ENC, OUTPUT);
+  pinMode(PIN_LED_USER, OUTPUT);
   
   pinMode(PIN_DIP1, INPUT);
   pinMode(PIN_DIP2, INPUT);
@@ -208,6 +208,7 @@ void setup()
       robotState |= STATE_READY;
       SERIAL_M5STACK.println("!READY TO GO !!!!!!!!!!");
     }
+    CON.clearButtonState();
   }
 
   enc1.init();
@@ -228,22 +229,30 @@ void setup()
 
 void loop()
 {
+  // コントローラからの受信
+  static bool conUpdate;
+  if(CON.update()){
+    digitalWrite(PIN_LED_USER, HIGH);
+    conUpdate = true;
+  }
 
   // 10msに1回ピン情報を出力する
   if(flag_10ms){
-    bool conUpdate = CON.update(); // コントローラからの受信
     
     //ユーザ編集部分 >>>>>>>>>>>>>>>>>
 
     // 手動操作するための処理 >>>>
     coords refV = manualCon.getRefVel(CON.readJoyLXbyte(), CON.readJoyLYbyte(), CON.readJoyRYbyte()); // ジョイスティックの値から，目標速度を生成
-    platform.VelocityControl(refV); // 目標速度に応じて，プラットフォームを制御
+    //platform.VelocityControl(refV); // 目標速度に応じて，プラットフォームを制御
     // <<<<
     
     // 上半身との通信部分
     if(conUpdate){
       UpperBody.send(CON.getButtonState(), 0x44, 0x00);
+    }else{
+      digitalWrite(PIN_LED_USER, LOW);
     }
+
     if(UpperBody.recv()){
       Serial.print("recv:");
       Serial.print(UpperBody.recvOrder);
@@ -287,7 +296,8 @@ void loop()
     }
     
     //ユーザ編集部分 <<<<<<<<<<<<<<<<<
-
+    CON.clearButtonState(); // 蓄積されたボタンの状態をクリアする ※これが無いとボタンの状態を正常に取れなくなる
+    conUpdate = false;
     flag_10ms = false;
   }
 

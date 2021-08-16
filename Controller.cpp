@@ -5,6 +5,8 @@
 Controller::Controller(){
     conData.ButtonState = 0;
     conData.RJoyX = 127, conData.RJoyY = 127, conData.LJoyX = 127, conData.LJoyY = 127;
+
+    lastButtonState = 0;
 }
 
 bool Controller::update(){
@@ -22,8 +24,9 @@ bool Controller::update(){
             if(receive_data[7] == checksum & 0xFF){
                 comCheck = true;
                 
-                pre_conData.ButtonState = conData.ButtonState;
-                conData.ButtonState = ((receive_data[0] & 0x3F) << 2) | ((receive_data[1] & 0x30) >> 4);
+                //pre_conData.ButtonState = conData.ButtonState;
+                lastButtonState = ((receive_data[0] & 0x3F) << 2) | ((receive_data[1] & 0x30) >> 4);
+                conData.ButtonState |= lastButtonState;
 
                 conData.RJoyX = ((receive_data[1] & 0x0F) << 4) | ((receive_data[2] & 0x3C) >> 2) ;
                 conData.RJoyY = ((receive_data[2] & 0x03) << 6) | ( receive_data[3] & 0x3F);
@@ -39,7 +42,6 @@ bool Controller::update(){
     // コントローラデータを取得する部分
     static int recv_num = 0;
     char c;
-    pre_conData.ButtonState = conData.ButtonState;
     while(SERIAL_CON.available()){
         c = SERIAL_CON.read();
         if(c == '\n'){
@@ -48,10 +50,12 @@ bool Controller::update(){
                 if((checksum & 0x3F) == (receive_data[9] - 0x20)){ // チェックサムの計算が合っていた場合のみ値を格納
                     comCheck = true;
 
-                    conData.ButtonState = 0, conData.LJoyX = 0, conData.LJoyY = 0, conData.RJoyX = 0, conData.RJoyY = 0;
-                    conData.ButtonState |= (unsigned int)(receive_data[0] - 0x20);
-                    conData.ButtonState |= (unsigned int)(receive_data[1] - 0x20) << 6;
-                    conData.ButtonState |= (unsigned int)(receive_data[2] - 0x20) << 12;
+                    //conData.ButtonState = 0;
+                    conData.LJoyX = 0, conData.LJoyY = 0, conData.RJoyX = 0, conData.RJoyY = 0;
+                    lastButtonState = (unsigned int)(receive_data[0] - 0x20);
+                    lastButtonState |= (unsigned int)(receive_data[1] - 0x20) << 6;
+                    lastButtonState |= (unsigned int)(receive_data[2] - 0x20) << 12;
+                    conData.ButtonState |= lastButtonState;
                 
                     conData.LJoyX |= (unsigned int)(receive_data[3] - 0x20);
                     conData.LJoyX |= (unsigned int)((receive_data[4] - 0x20) & 0x03) << 6;
@@ -89,7 +93,6 @@ bool Controller::update(){
     // コントローラデータを取得する部分
     static int recv_num = 0;
     char c;
-    pre_conData.ButtonState = conData.ButtonState; // 立下り，立ち上がりの検知用にも必要
     while(SERIAL_CON.available()){
         c = SERIAL_CON.read();
         if(c == '\n'){
@@ -99,10 +102,12 @@ bool Controller::update(){
                 if((checksum & 0x3F) == (receive_data[9] - 0x20)){ // チェックサムの計算が合っていた場合のみ値を格納
                     comCheck = true;
 
-                    conData.ButtonState = 0, conData.LJoyX = 0, conData.LJoyY = 0, conData.RJoyX = 0, conData.RJoyY = 0;
-                    conData.ButtonState |= receive_data[0] - 0x20;
-                    conData.ButtonState |= (receive_data[1] - 0x20) << 6;
-                    conData.ButtonState |= (receive_data[2] - 0x20) << 12;
+                    //conData.ButtonState = 0;
+                    conData.LJoyX = 0, conData.LJoyY = 0, conData.RJoyX = 0, conData.RJoyY = 0;
+                    lastButtonState = receive_data[0] - 0x20;
+                    lastButtonState |= (receive_data[1] - 0x20) << 6;
+                    lastButtonState |= (receive_data[2] - 0x20) << 12;
+                    conData.ButtonState |= lastButtonState;
                 
                     conData.LJoyX |= (receive_data[3] - 0x20);
                     conData.LJoyX |= ((receive_data[4] - 0x20) & 0x03) << 6;
@@ -120,6 +125,7 @@ bool Controller::update(){
                     conData.RJoyY |= ((receive_data[8] - 0x20) & 0x03) << 6;
                     conData.RJoyY = abs(conData.RJoyY - 0xFF);
 
+                    // 通信ミスであり得ない数のボタン数押されていた場合に無視する処理
                     int buttonPushNum = 0;
                     for(int i = 0; i < 16; i++){
                         buttonPushNum += (conData.ButtonState >> i) & 0x0001;
@@ -130,7 +136,7 @@ bool Controller::update(){
                     }
                 }
             }
-            recv_num = 0;
+            recv_num = 0;   
         }else{
             receive_data[recv_num] = c;
             recv_num++;
@@ -158,22 +164,27 @@ void Controller::statePrint()
 
 bool Controller::readButton_bin(unsigned int ButtonNum){//放しているときは０，押しているときは１
     return ((conData.ButtonState & (0x0001 << (ButtonNum - 1))) == (0x0001 << (ButtonNum - 1)))? true:false;
-    }
+}
     
 int Controller::readButton(unsigned int ButtonNum){//放しているときは０，押しているときは１，押した瞬間は２，放した瞬間は－１
     int result = 0;
     if((conData.ButtonState & (0x0001 << (ButtonNum - 1))) == (0x0001 << (ButtonNum - 1))) result += 2;
     if((pre_conData.ButtonState & (0x0001 << (ButtonNum - 1))) == (0x0001 << (ButtonNum - 1)))result -= 1;
     return result;
-    }
+}
 
 unsigned int Controller::getButtonState(){
     return conData.ButtonState;
-    }
+}
+
+void Controller::clearButtonState(){
+    pre_conData.ButtonState = conData.ButtonState;
+    conData.ButtonState = lastButtonState;
+}
 
 ControllerData Controller::getConData(){
     return conData;
-    }
+}
 
 double Controller::readJoyRX()
 {   
@@ -217,4 +228,31 @@ byte Controller::readJoyLXbyte()
 byte Controller::readJoyLYbyte()
 {
     return conData.LJoyY;
+}
+
+unsigned int Controller::getButtonFlagRise(){
+    // 立ち上がり，立下りのフラッギング処理 (フラグクリアは別関数で)
+    unsigned int buttonFlagRise = 0;
+    if(pre_conData.ButtonState != conData.ButtonState){
+        for(int i = 0; i < 16; i++){
+            int mask = 0x01 << i;
+            if((conData.ButtonState & mask) != (pre_conData.ButtonState & mask)){
+                if((conData.ButtonState & mask) == mask) buttonFlagRise |= (conData.ButtonState & mask);
+            }
+        } 
+    }
+    return buttonFlagRise;
+}
+
+unsigned int Controller::getButtonFlagFall(){
+    unsigned int buttonFlagFall = 0;
+    if(pre_conData.ButtonState != conData.ButtonState){
+        for(int i = 0; i < 16; i++){
+            int mask = 0x01 << i;
+            if((conData.ButtonState & mask) != (pre_conData.ButtonState & mask)){
+                if((pre_conData.ButtonState & mask) == mask) buttonFlagFall |= (pre_conData.ButtonState & mask);
+            }
+        } 
+    }
+    return buttonFlagFall;
 }

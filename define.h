@@ -15,8 +15,8 @@ struct coords{
 #define SERIAL_UPPER    Serial0
 #define SERIAL_LPMSME1  Serial1
 #define SERIAL_ROBOCLAW Serial4
-#define SERIAL_CON      Serial5
-// #define SERIAL_CON      Serial7 // XBeeからコントローラデータを受信する場合
+// #define SERIAL_CON      Serial5
+#define SERIAL_CON      Serial7 // XBeeからコントローラデータを受信する場合
 #define SERIAL_LCD      Serial6
 #define SERIAL_M5STACK  Serial6
 //#define SERIAL_XBEE     Serial7
@@ -149,7 +149,7 @@ struct coords{
 #define CON_ELECOM    ( 1 )
 #define CON_DS4       ( 2 )
 
-#define CON_TYPE  ( CON_ELECOM )
+#define CON_TYPE  ( CON_DS4 )
 
 #if CON_TYPE == CON_ADACHI
     #define MASK_BUTTON_UP    0x01
@@ -185,26 +185,28 @@ struct coords{
     #define MASK_BUTTON_L2     0x0040
     #define MASK_BUTTON_R2     0x0080
 
-    #define MASK_BUTTON_PS     0x0100 // PS4のときはPSボタン
-    #define MASK_BUTTON_PAD    0x0200 // PS4のときはパッド
+    #define MASK_BUTTON_PAD     0x0100 // PS4のときはPADボタン
+    #define MASK_BUTTON_PS      0x0200 // PS4のときはPS
     #define MASK_BUTTON_JOY_L   0x0100
     #define MASK_BUTTON_JOY_R   0x0200
     #define MASK_BUTTON_BACK    0x0400
     #define MASK_BUTTON_START   0x0800
+    #define MASK_BUTTON_SHARE   0x0400
+    #define MASK_BUTTON_OPTION  0x0800
 
     #define MASK_BUTTON_UP     0x1000
     #define MASK_BUTTON_RIGHT  0x2000
     #define MASK_BUTTON_DOWN   0x4000
     #define MASK_BUTTON_LEFT   0x8000
 
-    #define BUTTON_UP    12
-    #define BUTTON_RIGHT 13
-    #define BUTTON_DOWN  14
-    #define BUTTON_LEFT  15
-    #define BUTTON_R1    5
-    #define BUTTON_R2    7
-    #define BUTTON_L1    4
-    #define BUTTON_L2    6
+    #define BUTTON_UP    13
+    #define BUTTON_RIGHT 14
+    #define BUTTON_DOWN  15
+    #define BUTTON_LEFT  16
+    #define BUTTON_R1    6
+    #define BUTTON_R2    8
+    #define BUTTON_L1    5
+    #define BUTTON_L2    7
 #endif
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 

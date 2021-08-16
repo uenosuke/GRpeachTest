@@ -18,7 +18,10 @@ class Controller{
         int  readButton(unsigned int ButtonNum);     //上にプラスして 押した瞬間は2，放した瞬間は-1を返す．    define.hを参考に数字を入力しても良い
 
         unsigned int getButtonState();  //分解する前のButtonStateの情報をprint 0~255の値をとる
+        void clearButtonState();
         ControllerData getConData();
+        unsigned int getButtonFlagRise();
+        unsigned int getButtonFlagFall();
     
                                 //       X
         double readJoyRX();     //       ^ 
@@ -41,6 +44,7 @@ class Controller{
         bool comCheck;
         ControllerData conData;
         ControllerData pre_conData;
+        unsigned int lastButtonState;
 
         byte serial_recieve(){
             char temp;

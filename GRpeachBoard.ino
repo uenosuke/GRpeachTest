@@ -1,6 +1,7 @@
-// 位置PIDのサンプルプログラムです
-// Elecomのゲームパッドの情報を利用します
-// 作成日：2021年5月27日　作成者：ueno
+// 手動操作するためのサンプルプログラムです
+// Leonardo pro Micro とUSBホストシールドを使って，Elecomのゲームパッドの情報を取得します
+// ジョイスティックの状態に応じてロボットの速度を制御します
+// 編集者：小林(亮)
 // 最終修正日：2021年7月25日 編集者：ueno　※上半身との通信対応
 
 #include <Arduino.h>
@@ -52,6 +53,7 @@ Button button_left(PIN_SW_LEFT);
 Button button_right(PIN_SW_RIGHT);
 Button button_yellow(PIN_SW_A);
 Button button_white(PIN_SW_B);
+
 
 // 最大最小範囲に収まるようにする関数
 double min_max(double value, double minmax)
@@ -130,6 +132,7 @@ void setup()
   SERIAL_CON.begin(115200);
   SERIAL_M5STACK.begin(115200);
   //SERIAL_XBEE.begin(115200);
+  SERIAL_UPPER.begin(115200);
   
   pinMode(PIN_XBEERESET, OUTPUT); // XBeeのリセット
   digitalWrite(PIN_XBEERESET, 0);
@@ -143,7 +146,7 @@ void setup()
   pinMode(PIN_LED_2, OUTPUT);
   pinMode(PIN_LED_3, OUTPUT);
   pinMode(PIN_LED_4, OUTPUT);
-  pinMode(PIN_LED_ENC, OUTPUT);
+  pinMode(PIN_LED_USER, OUTPUT);
   
   pinMode(PIN_DIP1, INPUT);
   pinMode(PIN_DIP2, INPUT);
@@ -158,12 +161,12 @@ void setup()
   analogWrite(PIN_LED_GREEN, 0);
 
   // LPMS-ME1の初期化
-  if(lpms.init() != 1) error_stop(); // 理由はわからないが，これをやる前にLEDblinkかanalogWriteを実行していないと初期化できない
+ /* if(lpms.init() != 1) error_stop(); // 理由はわからないが，これをやる前にLEDblinkかanalogWriteを実行していないと初期化できない
   robotState |= STATE_LPMS_ENABLE;
   LEDblink(PIN_LED_BLUE, 2, 100);  // 初期化が終わった証拠にブリンク
   SERIAL_M5STACK.println("!LPMS-ME1 init done!"); // M5stackのデバッグエリアに出力「!」を先頭に付ければ改行コードの前までを出力できる
   Serial.println("LPMS-ME1 init done!");
-  Serial.flush();
+  Serial.flush();*/
   
   if(mySD.init() == 0){
     robotState |= STATE_SD_INIT;
@@ -180,7 +183,7 @@ void setup()
     robotState |= STATE_SD_WRITE;
     SERIAL_M5STACK.println("!Log file created!");
   }
-
+  
   zone = digitalRead(PIN_DIP1) == 0 ? BLUE : RED;
   int actpathnum = autonomous.init(&mySD, zone);//←mySD.path_read(BLUE, motion->Px, motion.Py, motion.refvel, motion.refangle, motion.acc_mode, motion.acc_count, motion.dec_tbe);
   Serial.print("path num: ");
@@ -200,7 +203,7 @@ void setup()
     delay(5);
     CON.update();
     send_state(0);
-    
+
     if(CON.readButton(BUTTON_RIGHT) == 2){
       robotState |= STATE_READY;
       SERIAL_M5STACK.println("!READY TO GO !!!!!!!!!!");
@@ -235,47 +238,56 @@ void loop()
 
   // 10msに1回ピン情報を出力する
   if(flag_10ms){
+    
     //ユーザ編集部分 >>>>>>>>>>>>>>>>>
 
-    // 位置制御させるための処理 >>>>
-    gRefV = autonomous.getRefVel(CON.getButtonState()); // 各目標点に対する位置決め動作を生成
-    platform.VelocityControl(gRefV); // 目標速度に応じて，プラットフォームを制御
+    // 手動操作するための処理 >>>>
+    coords refV = manualCon.getRefVel(CON.readJoyLXbyte(), CON.readJoyLYbyte(), CON.readJoyRYbyte()); // ジョイスティックの値から，目標速度を生成
+    platform.VelocityControl(refV); // 目標速度に応じて，プラットフォームを制御
     // <<<<
-
+    
     // 上半身との通信部分
     if(conUpdate){
-      UpperBody.send((uint16_t)CON.getButtonState(), 0x44, 0x00);
+      UpperBody.send(CON.getButtonState(), 0x44, 0x00);
     }else{
       digitalWrite(PIN_LED_USER, LOW);
     }
-
-    if(UpperBody.recv()){
+    
+    /*if(UpperBody.recv()){
       Serial.print("recv:");
       Serial.print(UpperBody.recvOrder);
-    }
+    }*/
     
+
+
+    if(CON.readButton(BUTTON_L1) == -1) digitalWrite(PIN_LED_1, HIGH);
+    else digitalWrite(PIN_LED_1, LOW);
+    if(CON.readButton(BUTTON_L1) == 2) digitalWrite(PIN_LED_2, HIGH);
+    else digitalWrite(PIN_LED_2, LOW);
+
     // シリアル出力する
-    Serial.print(CON.getButtonState(),BIN);
+    Serial.print(CON.getButtonState());
+    Serial.print(" ");  
+    Serial.println(CON.getButtonFlagFall());
+    /*Serial.print(CON.getButtonState(),BIN);
     Serial.print(" ");
     Serial.print(CON.readJoyLXbyte());
     Serial.print(" ");
     Serial.print(CON.readJoyLYbyte());
     Serial.print(" ");
-    Serial.print(CON.readJoyRXbyte());
-    Serial.print(" ");
     Serial.print(CON.readJoyRYbyte());
     Serial.print(" ");
-    Serial.print(gRefV.x);
+    Serial.print(refV.x);
     Serial.print(" ");
-    Serial.print(gRefV.y);
+    Serial.print(refV.y);
     Serial.print(" ");
-    Serial.print(gRefV.z);
+    Serial.print(refV.z);
     Serial.print(" ");
     Serial.print(gPosi.x);
     Serial.print(" ");
     Serial.print(gPosi.y);
     Serial.print(" ");
-    Serial.println(gPosi.z);
+    Serial.println(gPosi.z);*/
 
     // SDカードにログを吐く
     if(SDwrite){ // 変数が追加されています!!!!
@@ -292,7 +304,7 @@ void loop()
 
       mySD.write_logdata(dataString);
     }
-
+    
     //ユーザ編集部分 <<<<<<<<<<<<<<<<<
     CON.clearButtonState(); // 蓄積されたボタンの状態をクリアする ※これが無いとボタンの状態を正常に取れなくなる
     conUpdate = false;
@@ -302,6 +314,7 @@ void loop()
   // 100msごとにLCDを更新する
   if(flag_100ms){
     send_state(1); // M5stackへ状態の送信 ※不要な場合はコメントアウトを
+    //send_state(2); // 引数2で現在位置だけ送信
 
     //ユーザ編集部分 >>>>>>>>>>>>>>>>>
 

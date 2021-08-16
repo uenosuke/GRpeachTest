@@ -204,6 +204,7 @@ void setup()
       robotState |= STATE_READY;
       SERIAL_M5STACK.println("!READY TO GO !!!!!!!!!!");
     }
+    CON.clearButtonState();
   }
 
   enc1.init();
@@ -224,10 +225,15 @@ void setup()
 
 void loop()
 {
+  // コントローラからの受信
+  static bool conUpdate;
+  if(CON.update()){
+    digitalWrite(PIN_LED_USER, HIGH);
+    conUpdate = true;
+  }
+
   // 10msに1回ピン情報を出力する
   if(flag_10ms){
-    bool conUpdate = CON.update(); // コントローラからの受信
-    
     //ユーザ編集部分 >>>>>>>>>>>>>>>>>
 
     // 軌道追従制御させるための処理 >>>>
@@ -238,7 +244,10 @@ void loop()
     // 上半身との通信部分
     if(conUpdate){
       UpperBody.send((uint16_t)CON.getButtonState(), 0x44, 0x00);
+    }else{
+      digitalWrite(PIN_LED_USER, LOW);
     }
+    
     if(UpperBody.recv()){
       Serial.print("recv:");
       Serial.print(UpperBody.recvOrder);
@@ -284,7 +293,8 @@ void loop()
     }
 
     //ユーザ編集部分 <<<<<<<<<<<<<<<<<
-    
+    CON.clearButtonState(); // 蓄積されたボタンの状態をクリアする ※これが無いとボタンの状態を正常に取れなくなる
+    conUpdate = false;
     flag_10ms = false;
   }
 
