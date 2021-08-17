@@ -55,7 +55,6 @@ bool Controller::update(){
                     lastButtonState = (unsigned int)(receive_data[0] - 0x20);
                     lastButtonState |= (unsigned int)(receive_data[1] - 0x20) << 6;
                     lastButtonState |= (unsigned int)(receive_data[2] - 0x20) << 12;
-                    conData.ButtonState |= lastButtonState;
                 
                     conData.LJoyX |= (unsigned int)(receive_data[3] - 0x20);
                     conData.LJoyX |= (unsigned int)((receive_data[4] - 0x20) & 0x03) << 6;
@@ -77,9 +76,11 @@ bool Controller::update(){
                     for(int i = 0; i < 16; i++){
                         buttonPushNum += (conData.ButtonState >> i) & 0x0001;
                     }
-                    if(buttonPushNum > 10){
-                        conData.ButtonState = pre_conData.ButtonState;
+                    if(buttonPushNum > 5){
+                        //conData.ButtonState = pre_conData.ButtonState;
                         comCheck = false;
+                    }else{
+                        conData.ButtonState |= lastButtonState;
                     }
                 }
             }
@@ -95,44 +96,46 @@ bool Controller::update(){
     char c;
     while(SERIAL_CON.available()){
         c = SERIAL_CON.read();
+        //Serial.print(c);
         if(c == '\n'){
             if(recv_num == 10){ // データ数はチェックサム含めて10個(0~9)
                 checksum = 0;
-                for(int i = 0; i < 9; i++) checksum += (unsigned int)(receive_data[i] - 0x20); // チェックサムの計算
+                for(int i = 0; i < 9; i++) checksum ^= (unsigned int)(receive_data[i] - 0x20); // チェックサムの計算
                 if((checksum & 0x3F) == (receive_data[9] - 0x20)){ // チェックサムの計算が合っていた場合のみ値を格納
                     comCheck = true;
 
                     //conData.ButtonState = 0;
                     conData.LJoyX = 0, conData.LJoyY = 0, conData.RJoyX = 0, conData.RJoyY = 0;
-                    lastButtonState = receive_data[0] - 0x20;
-                    lastButtonState |= (receive_data[1] - 0x20) << 6;
-                    lastButtonState |= (receive_data[2] - 0x20) << 12;
-                    conData.ButtonState |= lastButtonState;
+                    lastButtonState = (unsigned int)(receive_data[0] - 0x20) & 0x3F;
+                    lastButtonState |= (unsigned int)((receive_data[1] - 0x20) & 0x3F) << 6;
+                    lastButtonState |= (unsigned int)((receive_data[2] - 0x20) & 0x0F) << 12;
                 
-                    conData.LJoyX |= (receive_data[3] - 0x20);
-                    conData.LJoyX |= ((receive_data[4] - 0x20) & 0x03) << 6;
+                    conData.LJoyX |= (unsigned int)(receive_data[3] - 0x20);
+                    conData.LJoyX |= (unsigned int)((receive_data[4] - 0x20) & 0x03) << 6;
                     conData.LJoyX = abs(conData.LJoyX - 0xFF);
 
-                    conData.LJoyY |= ((receive_data[4] - 0x20) & 0x3C) >> 2;
-                    conData.LJoyY |= ((receive_data[5] - 0x20) & 0x0F) << 4;
+                    conData.LJoyY |= (unsigned int)((receive_data[4] - 0x20) & 0x3C) >> 2;
+                    conData.LJoyY |= (unsigned int)((receive_data[5] - 0x20) & 0x0F) << 4;
                     conData.LJoyY = abs(conData.LJoyY - 0xFF);
 
-                    conData.RJoyX |= ((receive_data[5] - 0x20) & 0x30) >> 4;
-                    conData.RJoyX |= ((receive_data[6] - 0x20) & 0x3F) << 2;
+                    conData.RJoyX |= (unsigned int)((receive_data[5] - 0x20) & 0x30) >> 4;
+                    conData.RJoyX |= (unsigned int)((receive_data[6] - 0x20) & 0x3F) << 2;
                     conData.RJoyX = abs(conData.RJoyX - 0xFF);
 
-                    conData.RJoyY |= (receive_data[7] - 0x20);
-                    conData.RJoyY |= ((receive_data[8] - 0x20) & 0x03) << 6;
+                    conData.RJoyY |= (unsigned int)(receive_data[7] - 0x20);
+                    conData.RJoyY |= (unsigned int)((receive_data[8] - 0x20) & 0x03) << 6;
                     conData.RJoyY = abs(conData.RJoyY - 0xFF);
 
                     // 通信ミスであり得ない数のボタン数押されていた場合に無視する処理
                     int buttonPushNum = 0;
                     for(int i = 0; i < 16; i++){
-                        buttonPushNum += (conData.ButtonState >> i) & 0x0001;
+                        buttonPushNum += (lastButtonState >> i) & 0x0001;
                     }
-                    if(buttonPushNum > 10){
-                        conData.ButtonState = pre_conData.ButtonState;
+                    if(buttonPushNum > 5){
+                        //conData.ButtonState = pre_conData.ButtonState;
                         comCheck = false;
+                    }else{
+                        conData.ButtonState = lastButtonState & 0xFFFF;
                     }
                 }
             }
@@ -179,7 +182,6 @@ unsigned int Controller::getButtonState(){
 
 void Controller::clearButtonState(){
     pre_conData.ButtonState = conData.ButtonState;
-    conData.ButtonState = lastButtonState;
 }
 
 ControllerData Controller::getConData(){

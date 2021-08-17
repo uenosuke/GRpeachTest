@@ -249,6 +249,13 @@ void loop()
     // 上半身との通信部分
     if(conUpdate){
       UpperBody.send(CON.getButtonState(), 0x44, 0x00);
+      Serial.print(CON.getButtonState(), HEX);
+      Serial.print(" ");
+      Serial.print(CON.readJoyLXbyte());
+      Serial.print(" ");
+      Serial.print(CON.readJoyLYbyte());
+      Serial.print(" ");
+      Serial.println(CON.readJoyRYbyte());
     }else{
       digitalWrite(PIN_LED_USER, LOW);
     }
@@ -266,9 +273,9 @@ void loop()
     else digitalWrite(PIN_LED_2, LOW);
 
     // シリアル出力する
-    Serial.print(CON.getButtonState());
+    /*Serial.print(CON.getButtonState());
     Serial.print(" ");  
-    Serial.println(CON.getButtonFlagFall());
+    Serial.println(CON.getButtonFlagFall());*/
     /*Serial.print(CON.getButtonState(),BIN);
     Serial.print(" ");
     Serial.print(CON.readJoyLXbyte());
